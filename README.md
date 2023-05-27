@@ -1,0 +1,1 @@
+# flutter_isar_db

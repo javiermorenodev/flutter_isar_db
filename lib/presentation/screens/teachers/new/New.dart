@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_isar_db/blocs/blocs.dart';
+import 'package:flutter_isar_db/db/entities/entities.dart';
 import 'package:flutter_isar_db/presentation/widgets/widgets.dart';
 import 'package:flutter_isar_db/utils/utils.dart';
 
@@ -48,6 +51,14 @@ class _NewTeacherScreenState extends State<NewTeacherScreen> {
     setState(() {});
 
     if (band) return;
+
+    final teacher = Teacher()
+      ..email = _emailTextEditingController.text.trim()
+      ..name = _nameTextEditingController.text
+      ..lastName = _lastNameTextEditingController.text
+      ..phone = _phoneTextEditingController.text;
+
+    context.read<TeachersBloc>().add(SaveTeacher(teacher: teacher));
   }
 
   @override
@@ -62,52 +73,81 @@ class _NewTeacherScreenState extends State<NewTeacherScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: ContentWidget(
-        header: const HeaderWidget(
-          title: 'Nuevo profesor',
-        ),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              TextFieldWidget(
-                label: 'Nombre',
-                hintText: 'Nombre del profesor',
-                icon: Icons.school,
-                controller: _nameTextEditingController,
-                error: _errorName,
+    return BlocBuilder<TeachersBloc, TeachersState>(
+      builder: (context, state) {
+        if (state.add) {
+          Future.delayed(Duration.zero, () {
+            context.read<TeachersBloc>()
+              ..add(InitTeachers())
+              ..add(GetAllTeachers());
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Profesor agregado con éxito'),
+                backgroundColor: Colors.green,
               ),
-              const SizedBox(height: 20.0),
-              TextFieldWidget(
-                label: 'Apellido',
-                hintText: 'Apellido del profesor',
-                icon: Icons.school,
-                controller: _lastNameTextEditingController,
-                error: _errorLastName,
+            );
+            Navigator.pop(context);
+          });
+        }
+        if (state.error != '') {
+          Future.delayed(Duration.zero, () {
+            context.read<TeachersBloc>().add(InitTeachers());
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(state.error),
+                backgroundColor: const Color(0xFFc89a94),
               ),
-              const SizedBox(height: 20.0),
-              TextFieldWidget(
-                label: 'Correo',
-                hintText: 'Correo del profesor',
-                icon: Icons.email,
-                controller: _emailTextEditingController,
-                error: _errorEmail,
-                keyboardType: TextInputType.emailAddress,
+            );
+          });
+        }
+        return Scaffold(
+          body: ContentWidget(
+            header: const HeaderWidget(
+              title: 'Nuevo profesor',
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                children: [
+                  TextFieldWidget(
+                    label: 'Nombre',
+                    hintText: 'Nombre del profesor',
+                    icon: Icons.school,
+                    controller: _nameTextEditingController,
+                    error: _errorName,
+                  ),
+                  const SizedBox(height: 20.0),
+                  TextFieldWidget(
+                    label: 'Apellido',
+                    hintText: 'Apellido del profesor',
+                    icon: Icons.school,
+                    controller: _lastNameTextEditingController,
+                    error: _errorLastName,
+                  ),
+                  const SizedBox(height: 20.0),
+                  TextFieldWidget(
+                    label: 'Correo',
+                    hintText: 'Correo del profesor',
+                    icon: Icons.email,
+                    controller: _emailTextEditingController,
+                    error: _errorEmail,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 20.0),
+                  TextFieldWidget(
+                    label: 'Teléfono',
+                    hintText: 'Teléfono del profesor',
+                    icon: Icons.call,
+                    controller: _phoneTextEditingController,
+                    error: false,
+                    keyboardType: TextInputType.number,
+                  ),
+                  ButtonWidget(onPressed: _save),
+                ],
               ),
-              const SizedBox(height: 20.0),
-              TextFieldWidget(
-                label: 'Teléfono',
-                hintText: 'Teléfono del profesor',
-                icon: Icons.call,
-                controller: _phoneTextEditingController,
-                error: false,
-                keyboardType: TextInputType.number,
-              ),
-              ButtonWidget(onPressed: _save),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

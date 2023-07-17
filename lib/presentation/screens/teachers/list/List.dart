@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_isar_db/blocs/blocs.dart';
+import 'package:flutter_isar_db/db/entities/entities.dart';
 import 'package:flutter_isar_db/presentation/screens/screens.dart';
 import 'package:flutter_isar_db/presentation/screens/teachers/detail/index.dart';
 
@@ -10,6 +13,12 @@ class ListTeachersScreen extends StatefulWidget {
 }
 
 class _ListTeachersScreenState extends State<ListTeachersScreen> {
+  @override
+  void initState() {
+    context.read<TeachersBloc>().add(GetAllTeachers());
+    super.initState();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -25,12 +34,25 @@ class _ListTeachersScreenState extends State<ListTeachersScreen> {
             ),
           ),
           Expanded(
-            child: ListView.separated(
-              itemBuilder: (context, index) {
-                return _item();
+            child: BlocBuilder<TeachersBloc, TeachersState>(
+              builder: (context, state) {
+                return state.loading
+                    ? Center(
+                        child: CircularProgressIndicator(
+                            color: Theme.of(context).primaryColor),
+                      )
+                    : state.listTeachers.isEmpty
+                        ? const Center(child: Text('No hay registros'))
+                        : ListView.separated(
+                            itemBuilder: (context, index) {
+                              final teacher = state.listTeachers[index];
+                              return _item(teacher);
+                            },
+                            separatorBuilder: (context, index) =>
+                                const Divider(),
+                            itemCount: state.listTeachers.length,
+                          );
               },
-              separatorBuilder: (context, index) => const Divider(),
-              itemCount: 5,
             ),
           )
         ],
@@ -45,13 +67,13 @@ class _ListTeachersScreenState extends State<ListTeachersScreen> {
     );
   }
 
-  Widget _item() {
+  Widget _item(Teacher teacher) {
     return GestureDetector(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const TeacherDetailScreen(),
+            builder: (context) => TeacherDetailScreen(teacher: teacher),
           ),
         );
       },
@@ -78,10 +100,10 @@ class _ListTeachersScreenState extends State<ListTeachersScreen> {
                   text: TextSpan(
                     text: 'Correo: ',
                     style: TextStyle(color: Theme.of(context).primaryColor),
-                    children: const [
+                    children: [
                       TextSpan(
-                        text: 'correo@correo.com',
-                        style: TextStyle(
+                        text: teacher.email,
+                        style: const TextStyle(
                           color: Colors.grey,
                         ),
                       ),
@@ -91,7 +113,7 @@ class _ListTeachersScreenState extends State<ListTeachersScreen> {
                 const SizedBox(height: 10.0),
                 RichText(
                   text: TextSpan(
-                    text: 'Nombre: Profesor Apellido',
+                    text: 'Nombre: ${teacher.name} ${teacher.lastName}',
                     style: TextStyle(
                         color: Theme.of(context).primaryColor,
                         fontSize: 20.0,
@@ -105,7 +127,10 @@ class _ListTeachersScreenState extends State<ListTeachersScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  children: [_studentsIcons(), const Text(' + 2 cursos')],
+                  children: [
+                    _studentsIcons(),
+                    Text(' + ${teacher.courses.length}')
+                  ],
                 ),
                 Container(
                   padding: const EdgeInsets.all(5.0),

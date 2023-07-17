@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_isar_db/db/entities/entities.dart';
 import 'package:flutter_isar_db/presentation/widgets/widgets.dart';
 
 class TeacherDetailScreen extends StatelessWidget {
-  const TeacherDetailScreen({super.key});
+  final Teacher teacher;
+
+  const TeacherDetailScreen({super.key, required this.teacher});
 
   @override
   Widget build(BuildContext context) {
@@ -25,9 +28,10 @@ class TeacherDetailScreen extends StatelessWidget {
             ),
             Expanded(
               child: ListView.separated(
-                itemCount: 2,
+                itemCount: teacher.courses.length,
                 itemBuilder: (context, index) {
-                  return const ListTile(title: Text('Curso'));
+                  final course = teacher.courses.elementAt(index);
+                  return ListTile(title: Text(course.name!));
                 },
                 separatorBuilder: (context, index) => const Divider(),
               ),
@@ -62,10 +66,10 @@ class TeacherDetailScreen extends StatelessWidget {
                 text: TextSpan(
                   text: 'Correo: ',
                   style: TextStyle(color: Theme.of(context).primaryColor),
-                  children: const [
+                  children: [
                     TextSpan(
-                      text: 'correo@correo.com',
-                      style: TextStyle(
+                      text: teacher.email,
+                      style: const TextStyle(
                         color: Colors.grey,
                       ),
                     ),
@@ -75,7 +79,7 @@ class TeacherDetailScreen extends StatelessWidget {
               const SizedBox(height: 10.0),
               RichText(
                 text: TextSpan(
-                  text: 'Nombre: Profesor Apellido',
+                  text: 'Nombre: ${teacher.name} ${teacher.lastName}',
                   style: TextStyle(
                       color: Theme.of(context).primaryColor,
                       fontSize: 20.0,
